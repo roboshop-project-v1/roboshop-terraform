@@ -1,63 +1,58 @@
-resource "aws_instance" "frontend" {
-  ami           = "ami-0f3c7d07486cad139"
-  instance_type = "t2.micro"
+variable "ami" {
+  default = "ami-0f3c7d07486cad139"
+}
 
-  vpc_security_group_ids = ["sg-0490a4409ed09ba21"]
+variable "instance_type" {
+  default = "t2.micro"
+}
 
-  tags = {
-    Name = "frontend"
+variable "vpc_security_group_ids" {
+  default = ["sg-0490a4409ed09ba21"]
+}
+
+variable "zone_id" {
+  default = "Z05459522TM73CF1WNKI7"
+  
+}
+
+variable "components" {
+
+  default = {
+      frontend  = {},
+      mongodb   = {},
+      catalogue = {},
+      redis     = {},
+      user      = {},
+      cart      = {},
+      mysql     = {},
+      shipping  = {},
+      rabbitmq  = {},
+      payment   = {}
+
   }
+
 }
 
-resource "aws_route53_record" "frontend" {
-  zone_id = "Z05459522TM73CF1WNKI7"
-  name    = "frontend.jdevops.online"
-  type    = "A"
-  ttl     = 30
-  records = [aws_instance.frontend.private_ip]
-}
+resource "aws_instance" "instance" {
 
+  for_each = var.components
+  ami           = var.ami
+  instance_type = var.instance_type
 
-resource "aws_instance" "mongodb" {
-  ami           = "ami-0f3c7d07486cad139"
-  instance_type = "t2.micro"
-
-  vpc_security_group_ids = ["sg-0490a4409ed09ba21"]
+  vpc_security_group_ids = var.vpc_security_group_ids
 
   tags = {
-    Name = "mongodb"
-  }
-}
-
-
-resource "aws_route53_record" "mongodb" {
-  zone_id = "Z05459522TM73CF1WNKI7"
-  name    = "mongodb.jdevops.online"
-  type    = "A"
-  ttl     = 30
-  records = [aws_instance.mongodb.private_ip]
-}
-
-
-
-
-
-resource "aws_instance" "catalogue" {
-  ami           = "ami-0f3c7d07486cad139"
-  instance_type = "t2.micro"
-
-  vpc_security_group_ids = ["sg-0490a4409ed09ba21"]
-
-  tags = {
-    Name = "catalogue"
+    Name = each.key
   }
 }
 
 
-resource "aws_route53_record" "catalogue" {
-  zone_id = "Z05459522TM73CF1WNKI7"
-  name    = "catalogue.jdevops.online"
+
+resource "aws_route53_record" "record" {
+  for_each = var.components
+  zone_id = var.zone_id
+  name    = "${each.key}.jdevops.online"
   type    = "A"
   ttl     = 30
-  records = [aws_instance.catalogue.private_ip]
+  records = [aws_instance.instance[each.key].private_ip]
 }
