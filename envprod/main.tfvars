@@ -1,0 +1,1 @@
+test = "hello this is dev variable in tfvars"
