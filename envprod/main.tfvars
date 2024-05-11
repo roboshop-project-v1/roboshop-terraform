@@ -1,1 +1,1 @@
-test = "hello this is dev variable in tfvars"
+test = "hello this is PROD variable in tfvars"
